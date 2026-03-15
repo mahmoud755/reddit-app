@@ -48,14 +48,17 @@ jobs:
         run: |
           docker build -t reddit-web:${{ github.sha }} ./app
 
-      - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@0.33.1
-        with:
-          image-ref: reddit-web:${{ github.sha }}
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: '0'
+      - name: Install Trivy
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.deb
+          sudo dpkg -i trivy_0.49.1_Linux-64bit.deb
+
+      - name: Scan image with Trivy (non-blocking)
+        run: |
+          echo "Running Trivy scan for reddit-web:${{ github.sha }}"
+          trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 reddit-web:${{ github.sha }}
 
       - name: List Docker images
         run: docker images | grep reddit-web || true
